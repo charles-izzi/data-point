@@ -1,37 +1,34 @@
 <template>
-  <div>
-    <p>{{ title }}</p>
-    <ul>
-      <li v-for="todo in todos" :key="todo.id" @click="increment">
-        {{ todo.id }} - {{ todo.content }}
-      </li>
-    </ul>
-    <p>Count: {{ todoCount }} / {{ meta.totalCount }}</p>
-    <p>Active: {{ active ? 'yes' : 'no' }}</p>
-    <p>Clicks on todos: {{ clickCount }}</p>
+  <div class="container">
+    <q-btn @click="handleClick" color="primary" label="Data Point"> </q-btn>
+    <q-list bordered class="q-mt-md">
+      <q-item v-for="item in items" :key="item" clickable>
+        <q-item-section>{{ item }}</q-item-section>
+      </q-item>
+    </q-list>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { Todo, Meta } from './models';
+import { ref } from 'vue'
+import { QBtn, QList, QItem, QItemSection } from 'quasar'
 
-interface Props {
-  title: string;
-  todos?: Todo[];
-  meta: Meta;
-  active: boolean;
-};
+const items = ref<string[]>([])
+let itemCount = 1
 
-const props = withDefaults(defineProps<Props>(), {
-  todos: () => []
-});
-
-const clickCount = ref(0);
-function increment() {
-  clickCount.value += 1;
-  return clickCount.value;
+function handleClick() {
+  items.value.push(`Item ${itemCount}`)
+  itemCount++
+  console.log('clicked Data Point')
 }
-
-const todoCount = computed(() => props.todos.length);
 </script>
+
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+</style>
