@@ -1,6 +1,6 @@
 {
   "name": "data-point",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "An app for easy personal data collection",
   "author": "Charles Izzi <charlesizzi@microsoft.com>",
   "private": true,

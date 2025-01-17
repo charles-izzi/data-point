@@ -7,7 +7,7 @@ on:
     branches:
       - main
 jobs:
-  build_and_deploy:
+  build_and_deploy_web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,3 +18,51 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DATA_POINT_40A83 }}
           channelId: live
           projectId: data-point-40a83
+  build_and_deploy_android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking out branch
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Capacitor Build
+        run: yarn && yarn build:android
+      - name: Decode Keystore
+        env:
+          ENCODED_STRING: ${{ secrets.KEYSTORE_BASE_64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEYSTORE_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          echo $ENCODED_STRING > src-capacitor/android/keystore-b64.txt
+          base64 -d src-capacitor/android/keystore-b64.txt > src-capacitor/android/keystore.jks
+      - name: Build Release bundle
+        env:
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEYSTORE_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          cd src-capacitor/android
+          ./gradlew bundleRelease --stacktrace
+
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        # ID used to access action output
+        id: sign_app
+        with:
+          releaseDirectory: src-capacitor/android/app/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: '34.0.0'
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+      - name: Distribute via Firebase App Distribution
+        run: firebase appdistribution:distribute ${{ steps.sign_app.outputs.signedReleaseFile }} --app 1:474323415905:android:48422a951631de137d4b20 --release-notes "first firebase distro" --testers-file src-capacitor/android/app/testers.txt
