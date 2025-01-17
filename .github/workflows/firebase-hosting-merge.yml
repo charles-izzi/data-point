@@ -33,6 +33,7 @@ jobs:
       - name: Capacitor Build
         run: yarn && yarn build:android
       - name: Decode Keystore
+        continue-on-error: true
         env:
           ENCODED_STRING: ${{ secrets.KEYSTORE_BASE_64 }}
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
