@@ -55,11 +55,11 @@ jobs:
         # ID used to access action output
         id: sign_app
         with:
-          releaseDirectory: src-capacitor/android/app/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+          releaseDirectory: src-capacitor/android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE_64 }}
+          alias: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+          keyStorePassword: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+          keyPassword: ${{ secrets.RELEASE_KEY_PASSWORD }}
         env:
           BUILD_TOOLS_VERSION: '34.0.0'
       - name: Install Firebase CLI
