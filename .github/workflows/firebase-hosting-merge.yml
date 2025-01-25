@@ -26,7 +26,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: 'ubuntu'
           java-version: 21
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -51,18 +51,25 @@ jobs:
           cd src-capacitor/android
           ./gradlew bundleRelease --stacktrace
 
-      - uses: r0adkll/sign-android-release@v1
-        name: Sign app APK
-        # ID used to access action output
-        id: sign_app
-        with:
-          releaseDirectory: src-capacitor/android/app/build/outputs/bundle/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE_64 }}
-          alias: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
-          keyStorePassword: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
-          keyPassword: ${{ secrets.RELEASE_KEY_PASSWORD }}
+      - name: Sign app APK
         env:
-          BUILD_TOOLS_VERSION: '34.0.0'
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEYSTORE_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+        run: |
+          jarsigner -keystore src-capacitor/android/keystore.jks -storepass ${{ secrets.RELEASE_KEYSTORE_PASSWORD }} -signedjar src-capacitor/android/app/build/outputs/bundle/release/app-release-signed.aab src-capacitor/android/app/build/outputs/bundle/release/app-release.aab ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+
+      # - uses: r0adkll/sign-android-release@v1
+      #   name: Sign app APK
+      #   # ID used to access action output
+      #   id: sign_app
+      #   with:
+      #     releaseDirectory: src-capacitor/android/app/build/outputs/bundle/release
+      #     signingKeyBase64: ${{ secrets.KEYSTORE_BASE_64 }}
+      #     alias: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+      #     keyStorePassword: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
+      #     keyPassword: ${{ secrets.RELEASE_KEY_PASSWORD }}
+      #   env:
+      #     BUILD_TOOLS_VERSION: '34.0.0'
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
       - name: Distribute via Firebase App Distribution
