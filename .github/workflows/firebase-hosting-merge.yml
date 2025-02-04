@@ -33,13 +33,13 @@ jobs:
       - name: Capacitor Build
         run: yarn && yarn build:android
       - name: Decode Keystore
-        continue-on-error: true
         env:
           ENCODED_STRING: ${{ secrets.KEYSTORE_BASE_64 }}
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           RELEASE_KEYSTORE_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
+          echo $ENCODED_STRING
           echo $ENCODED_STRING > src-capacitor/android/keystore-b64.txt
           base64 -d src-capacitor/android/keystore-b64.txt > src-capacitor/android/keystore.jks
       - name: Build Release bundle
