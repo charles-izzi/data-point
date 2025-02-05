@@ -40,7 +40,7 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           java --version
-          echo $ENCODED_STRING > src-capacitor/android/keystore-b64.txt
+          echo "$ENCODED_STRING" > src-capacitor/android/keystore-b64.txt
           base64 -d src-capacitor/android/keystore-b64.txt > src-capacitor/android/keystore.jks
       - name: Build Release bundle
         env:
