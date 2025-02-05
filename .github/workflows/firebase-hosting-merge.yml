@@ -73,4 +73,4 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
       - name: Distribute via Firebase App Distribution
-        run: firebase appdistribution:distribute ${{ steps.sign_app.outputs.signedReleaseFile }} --app 1:474323415905:android:48422a951631de137d4b20 --release-notes "first firebase distro" --testers-file src-capacitor/android/app/testers.txt
+        run: firebase appdistribution:distribute src-capacitor/android/app/build/outputs/bundle/release/app-release-signed.aab --app 1:474323415905:android:48422a951631de137d4b20 --release-notes "first firebase distro" --testers-file src-capacitor/android/app/testers.txt
