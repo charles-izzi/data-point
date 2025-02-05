@@ -33,33 +33,18 @@ jobs:
       - name: Capacitor Build
         run: yarn && yarn build:android
       - name: Decode Keystore
-        env:
-          ENCODED_STRING: ${{ secrets.KEYSTORE_BASE_64 }}
-          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-          RELEASE_KEYSTORE_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           java --version
-          echo "$ENCODED_STRING" > src-capacitor/android/keystore-b64.txt
+          echo "${{ secrets.KEYSTORE_BASE_64 }}" > src-capacitor/android/keystore-b64.txt
           base64 -d src-capacitor/android/keystore-b64.txt > src-capacitor/android/keystore.jks
       - name: Build Release bundle
-        env:
-          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-          RELEASE_KEYSTORE_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           cd src-capacitor/android
           ./gradlew bundleRelease --stacktrace
-
       - name: Sign app APK
-        env:
-          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-          RELEASE_KEYSTORE_ALIAS: ${{ secrets.RELEASE_KEYSTORE_ALIAS }}
         run: |
           jarsigner -keystore src-capacitor/android/keystore.jks -storepass "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" -signedjar src-capacitor/android/app/build/outputs/bundle/release/app-release-signed.aab src-capacitor/android/app/build/outputs/bundle/release/app-release.aab "${{ secrets.RELEASE_KEYSTORE_ALIAS }}"
-
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
-
       - name: Distribute via Firebase App Distribution
-        run: firebase appdistribution:distribute src-capacitor/android/app/build/outputs/bundle/release/app-release-signed.aab --app "${{ secrets.FIREBASE_APP_ID }}" --release-notes "first firebase distro" --testers-file src-capacitor/android/app/testers.txt --token "${{ secrets.FIREBASE_TOKEN }}"
+        run: firebase appdistribution:distribute src-capacitor/android/app/build/outputs/bundle/release/app-release-signed.aab --app "${{ secrets.FIREBASE_APP_ID }}" --release-notes "${{ github.event.head_commit.message }}" --testers-file src-capacitor/android/app/testers.txt --token "${{ secrets.FIREBASE_TOKEN }}"
