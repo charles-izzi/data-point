@@ -26,7 +26,13 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from 'src/stores/user-store'
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth'
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  signInWithPopup,
+  getRedirectResult,
+} from 'firebase/auth'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -37,8 +43,44 @@ const signInWithGoogle = async () => {
   try {
     const auth = getAuth()
     const provider = new GoogleAuthProvider()
-    await signInWithRedirect(auth, provider)
-    // The page will redirect to Google for authentication
+
+    // Check if we're running on Capacitor (mobile app)
+    const isCapacitor = typeof window !== 'undefined' && window.location.protocol === 'capacitor:'
+
+    // Check if we're running on localhost
+    const isLocalhost =
+      window.location.hostname === 'localhost' || window.location.hostname === '192.168.1.151'
+
+    if (isLocalhost && !isCapacitor) {
+      // Use popup for local development (works with HTTP)
+      const result = await signInWithPopup(auth, provider)
+      if (result) {
+        const user = result.user
+
+        // Update user store with basic user info
+        userStore.setUser({
+          id: user.uid,
+          name: user.displayName || 'User',
+        })
+
+        // Redirect to home page after successful login
+        router.push('/')
+      }
+    } else {
+      // For Capacitor (mobile) or production, configure the provider better
+      // Add the app's bundle ID to the OAuth 2.0 settings for redirect URL matching
+      if (isCapacitor) {
+        // For Android/iOS, set custom oauth redirect domain
+        provider.setCustomParameters({
+          // This allows Firebase to redirect back to your app after authentication
+          app_package_name: 'izzi.charles.datapoint', // Must match your Capacitor appId
+        })
+      }
+
+      // Use redirect for production (requires HTTPS) or mobile apps
+      await signInWithRedirect(auth, provider)
+      // The page will redirect to Google for authentication
+    }
   } catch (error) {
     console.error('Error initiating sign in with Google:', error)
     loading.value = false
