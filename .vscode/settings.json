@@ -3,14 +3,32 @@
   "editor.guides.bracketPairs": true,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": [
-    "source.fixAll.eslint"
-  ],
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "vue"
-  ],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "editor.codeActionsOnSave": ["source.fixAll.eslint"],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "vue"],
+  "files.exclude": {
+    "dist/": true,
+    ".DS_Store": true,
+    ".thumbs.db": true,
+    "node_modules": true,
+    ".quasar": true,
+    "/dist": true,
+    "/quasar.config.*.temporary.compiled*": true,
+    "/src-cordova/node_modules": true,
+    "/src-cordova/platforms": true,
+    "/src-cordova/plugins": true,
+    "/src-cordova/www": true,
+    "/src-capacitor/www": true,
+    "/src-capacitor/node_modules": true,
+    "npm-debug.log*": true,
+    "yarn-debug.log*": true,
+    "yarn-error.log*": true,
+    ".idea": true,
+    "*.suo": true,
+    "*.ntvs*": true,
+    "*.njsproj": true,
+    "*.sln": true,
+    ".env.local*": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "cSpell.words": ["firebaseui", "firestore"]
 }
