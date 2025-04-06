@@ -1,5 +1,21 @@
 {
   "appId": "izzi.charles.datapoint",
   "appName": "Data Point",
-  "webDir": "www"
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "App": {
+      "appUrlOpen": {
+        "enabled": true
+      }
+    }
+  },
+  "android": {
+    "allowMixedContent": true
+  }
 }

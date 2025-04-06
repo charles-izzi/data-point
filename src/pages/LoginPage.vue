@@ -32,6 +32,7 @@ import {
   signInWithRedirect,
   signInWithPopup,
   getRedirectResult,
+  type User,
 } from 'firebase/auth'
 
 const router = useRouter()
@@ -45,7 +46,10 @@ const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider()
 
     // Check if we're running on Capacitor (mobile app)
-    const isCapacitor = typeof window !== 'undefined' && window.location.protocol === 'capacitor:'
+    const isCapacitor =
+      typeof window !== 'undefined' &&
+      (window.location.protocol === 'capacitor:' ||
+        window.location.protocol === 'izzi.charles.datapoint:')
 
     // Check if we're running on localhost
     const isLocalhost =
@@ -55,36 +59,42 @@ const signInWithGoogle = async () => {
       // Use popup for local development (works with HTTP)
       const result = await signInWithPopup(auth, provider)
       if (result) {
-        const user = result.user
-
-        // Update user store with basic user info
-        userStore.setUser({
-          id: user.uid,
-          name: user.displayName || 'User',
-        })
-
-        // Redirect to home page after successful login
-        router.push('/')
+        handleAuthSuccess(result.user)
       }
     } else {
       // For Capacitor (mobile) or production, configure the provider better
-      // Add the app's bundle ID to the OAuth 2.0 settings for redirect URL matching
       if (isCapacitor) {
         // For Android/iOS, set custom oauth redirect domain
         provider.setCustomParameters({
-          // This allows Firebase to redirect back to your app after authentication
-          app_package_name: 'izzi.charles.datapoint', // Must match your Capacitor appId
+          // This ensures Firebase can redirect back to your app
+          app_package_name: 'izzi.charles.datapoint',
+          // Use mobile linking
+          redirect_uri: 'https://data-point-40a83.firebaseapp.com/__/auth/handler',
         })
       }
 
-      // Use redirect for production (requires HTTPS) or mobile apps
+      // Use redirect for production or mobile apps
       await signInWithRedirect(auth, provider)
-      // The page will redirect to Google for authentication
     }
   } catch (error) {
     console.error('Error initiating sign in with Google:', error)
     loading.value = false
   }
+}
+
+// Handle successful authentication
+const handleAuthSuccess = (user: User) => {
+  if (user) {
+    // Update user store with basic user info
+    userStore.setUser({
+      id: user.uid,
+      name: user.displayName || 'User',
+    })
+
+    // Redirect to home page after successful login
+    router.push('/')
+  }
+  loading.value = false
 }
 
 onMounted(async () => {
@@ -93,19 +103,15 @@ onMounted(async () => {
 
   // Handle redirect result when user comes back from authentication
   try {
+    loading.value = true
+    console.log('Checking for redirect result...')
+
     const result = await getRedirectResult(auth)
     if (result) {
-      // User successfully authenticated with Google
-      const user = result.user
-
-      // Update user store with basic user info
-      userStore.setUser({
-        id: user.uid,
-        name: user.displayName || 'User',
-      })
-
-      // Redirect to home page after successful login
-      router.push('/')
+      console.log('Successfully got redirect result')
+      handleAuthSuccess(result.user)
+    } else {
+      console.log('No redirect result found')
     }
   } catch (error) {
     console.error('Error completing sign-in with redirect:', error)
@@ -115,7 +121,8 @@ onMounted(async () => {
   // Check if user is already authenticated
   auth.onAuthStateChanged((user) => {
     if (user) {
-      router.push('/')
+      console.log('User is already authenticated:', user.uid)
+      handleAuthSuccess(user)
     } else {
       loading.value = false
     }

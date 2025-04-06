@@ -22,6 +22,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Deep linking for handling Firebase authentication -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                
+                <!-- For Firebase auth handler -->
+                <data android:scheme="https" 
+                      android:host="data-point-40a83.firebaseapp.com"
+                      android:pathPrefix="/__/auth/handler" />
+                
+                <!-- Custom scheme for direct app links -->
+                <data android:scheme="izzi.charles.datapoint" />
+            </intent-filter>
+
         </activity>
 
         <provider
