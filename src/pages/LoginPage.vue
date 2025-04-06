@@ -25,9 +25,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import { useUserStore } from 'src/stores/user-store'
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth'
 
 const router = useRouter()
+const userStore = useUserStore()
 const loading = ref(false)
 
 const signInWithGoogle = async () => {
@@ -35,9 +37,10 @@ const signInWithGoogle = async () => {
   try {
     const auth = getAuth()
     const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+    await signInWithRedirect(auth, provider)
+    // The page will redirect to Google for authentication
   } catch (error) {
-    console.error('Error signing in with Google:', error)
+    console.error('Error initiating sign in with Google:', error)
     loading.value = false
   }
 }
@@ -45,6 +48,27 @@ const signInWithGoogle = async () => {
 onMounted(async () => {
   // Check if user is already logged in
   const auth = getAuth()
+
+  // Handle redirect result when user comes back from authentication
+  try {
+    const result = await getRedirectResult(auth)
+    if (result) {
+      // User successfully authenticated with Google
+      const user = result.user
+
+      // Update user store with basic user info
+      userStore.setUser({
+        id: user.uid,
+        name: user.displayName || 'User',
+      })
+
+      // Redirect to home page after successful login
+      router.push('/')
+    }
+  } catch (error) {
+    console.error('Error completing sign-in with redirect:', error)
+    loading.value = false
+  }
 
   // Check if user is already authenticated
   auth.onAuthStateChanged((user) => {
