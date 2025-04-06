@@ -3,7 +3,8 @@
   "appName": "Data Point",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "hostname": "app"
   },
   "plugins": {
     "CapacitorHttp": {
@@ -17,5 +18,11 @@
   },
   "android": {
     "allowMixedContent": true
+  },
+  "appUrlOpen": {
+    "android": {
+      "hostname": "data-point-40a83.firebaseapp.com",
+      "path": "/__/auth/handler"
+    }
   }
 }

@@ -3,14 +3,20 @@
 </template>
 
 <script setup lang="ts">
-import { getAuth, onAuthStateChanged, browserLocalPersistence, setPersistence } from 'firebase/auth'
+import {
+  getAuth,
+  onAuthStateChanged,
+  browserLocalPersistence,
+  setPersistence,
+  getRedirectResult,
+} from 'firebase/auth'
 import { useRouter } from 'vue-router'
 import { useUserStore } from './stores/user-store'
 import { getUser, setUser, type User } from './backend/db/users'
 import { onMounted } from 'vue'
-import { App as CapApp } from '@capacitor/app'
+import { setupDeepLinkHandling } from './boot/firebase'
 
-onMounted(() => {
+onMounted(async () => {
   const auth = getAuth()
   const userStore = useUserStore()
   const router = useRouter()
@@ -18,23 +24,25 @@ onMounted(() => {
   // Set up persistence
   setPersistence(auth, browserLocalPersistence)
 
-  // Handle URL opens (for deep linking)
+  // Setup deep link handling with our dedicated function
+  setupDeepLinkHandling(router)
+
+  // Check for redirect result on app startup
   try {
-    // This will work only in a Capacitor app
-    CapApp.addListener('appUrlOpen', (event) => {
-      console.log('App opened with URL:', event.url)
-
-      // Handle the app open URL - this is crucial for authentication redirects
-      const slug = event.url.split('/__/auth/handler').pop()
-
-      if (slug) {
-        // We received a redirect from Firebase auth
-        console.log('Authentication redirect detected')
-        // The auth state will be captured by the onAuthStateChanged listener
+    const result = await getRedirectResult(auth)
+    if (result && result.user) {
+      console.log('Redirect result detected on app startup')
+      const signedInUser: User = {
+        id: result.user.uid,
+        name: result.user.displayName || 'New User',
       }
-    })
-  } catch (e) {
-    console.log('Not running in Capacitor environment, URL open listener not added', e)
+      userStore.setUser(signedInUser)
+      if (router.currentRoute.value.path === '/login') {
+        router.push('/')
+      }
+    }
+  } catch (error) {
+    console.error('Error processing redirect result:', error)
   }
 
   // Listen for auth state changes

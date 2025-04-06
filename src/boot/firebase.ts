@@ -2,7 +2,10 @@
 import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
 import { getFirestore } from 'firebase/firestore'
-import { getAuth } from 'firebase/auth'
+import { getAuth, getRedirectResult } from 'firebase/auth'
+import { App } from '@capacitor/app'
+import { useUserStore } from 'src/stores/user-store'
+import type { useRouter } from 'vue-router'
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -29,3 +32,39 @@ export const auth = getAuth(app)
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app)
+
+// Setup deep link handling for Capacitor
+export function setupDeepLinkHandling(router: ReturnType<typeof useRouter>) {
+  const isCapacitor =
+    typeof window !== 'undefined' &&
+    (window.location.protocol === 'capacitor:' ||
+      window.location.protocol === 'izzi.charles.datapoint:')
+
+  if (isCapacitor) {
+    // Listen for deep link events from Capacitor
+    App.addListener('appUrlOpen', async (data: { url: string }) => {
+      console.log('App opened with URL:', data.url)
+
+      // Check if this is a Firebase authentication redirect
+      if (data.url.includes('data-point-40a83.firebaseapp.com/__/auth/handler')) {
+        try {
+          console.log('Handling Firebase auth redirect')
+          const result = await getRedirectResult(auth)
+
+          if (result && result.user) {
+            const userStore = useUserStore()
+            userStore.setUser({
+              id: result.user.uid,
+              name: result.user.displayName || 'User',
+            })
+
+            // Navigate to home screen after successful login
+            router.push('/')
+          }
+        } catch (error) {
+          console.error('Error handling deep link auth redirect:', error)
+        }
+      }
+    })
+  }
+}

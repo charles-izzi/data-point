@@ -64,13 +64,17 @@ const signInWithGoogle = async () => {
     } else {
       // For Capacitor (mobile) or production, configure the provider better
       if (isCapacitor) {
-        // For Android/iOS, set custom oauth redirect domain
+        // For Android/iOS, set custom parameters for proper mobile redirects
         provider.setCustomParameters({
           // This ensures Firebase can redirect back to your app
           app_package_name: 'izzi.charles.datapoint',
-          // Use mobile linking
+          // Custom redirect URI that will be handled by Capacitor's deep linking
           redirect_uri: 'https://data-point-40a83.firebaseapp.com/__/auth/handler',
         })
+
+        // Add specific scopes needed
+        provider.addScope('email')
+        provider.addScope('profile')
       }
 
       // Use redirect for production or mobile apps
