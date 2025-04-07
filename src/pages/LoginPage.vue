@@ -71,10 +71,6 @@ const signInWithGoogle = async () => {
           // Custom redirect URI that will be handled by Capacitor's deep linking
           redirect_uri: 'https://data-point-40a83.firebaseapp.com/__/auth/handler',
         })
-
-        // Add specific scopes needed
-        provider.addScope('email')
-        provider.addScope('profile')
       }
 
       // Use redirect for production or mobile apps
